@@ -1,0 +1,11 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore dependency and build folders
+node_modules/
+dist/
+target/
+
+# Ignore VS Code settings
+.vscode/

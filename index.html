@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prototype 3 - Web Component</title>
+    <script type="module" src="player-component.js"></script>
+</head>
+<body>
+
+
+    <math-read-aloud-player 
+        audio-src="audio.mp3" 
+        marked-stream-src="stream.json">
+        
+        <article>
+            <h1>Quadratic Equations</h1>
+            <p id="p1">This is the first sentence. It will highlight first.</p>
+    
+            
+            <math id="m1" display="block">
+                <msup><mi>x</mi><mn>2</mn></msup>
+                <mo>+</mo>
+                <msup><mi>y</mi><mn>2</mn></msup>
+                <mo>=</mo>
+                <msup><mi>z</mi><mn>2</mn></msup>
+            </math>
+
+            <p id="p3">This is the third sentence. The audio will end here.</p>
+        </article>
+
+    </math-read-aloud-player>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+---
+- include: "../../definitions.yaml"
+
+# IntentMappings Syntax:
+#
+# This section defines how each "intent" is spoken for various grammatical forms (fixities such as "prefix", "infix", "postfix", and "function"),
+#  along with supporting different verbosity levels.
+# The syntax is a little bit complicated, but allows a declarative syntax so you don't have to write as many rules.
+#
+# For each intent, you specify spoken forms for one or more fixities using the syntax below.
+#
+# - Each mapping has the form:
+#     "<intent>": "<fixity1>=<speech1> || <fixity2>=<speech2> || ...",
+#   Every alternative must name a fixity and use "="; the fixity requested when speaking selects one.
+#
+# - Separate multiple fixities with "||". Spaces are allowed around any delimiter for readability.
+# - Within a speech string, "|" selects the verbosity form:
+#     - one "|"  (two forms):   the first is 'terse', the second is used for 'medium' and 'verbose'
+#     - two "|"  (three forms): 'terse', 'medium', 'verbose', in that order
+#     - no "|":                 the same spoken form is used for all verbosity levels
+#
+# - Use semicolons ";" to divide opening; main; closing bracketing words within the name part,
+#   where such words make sense (a name with no ";" is just the main phrase).
+# - If an intent has multiple fixities but a definition does not specify one, the first fixity listed is chosen by default.
+#
+# Functions and argument glue (the part after the name):
+# - ":" separates the name/bracketing phrase from the argument-glue options that follow it.
+# - Arity template (two or more ":" options, or one option with ','-separated glue words): the
+#   number of glue words implies the arity, and the final argument is preceded by "of".
+#   Example: "sum: over: from,to"
+#      - 1 arg:  "sum of x"
+#      - 2 args: "sum over i of x"
+#      - 3 args: "sum from i to n of x"
+#   If no option matches the argument count, the arguments are separated with "comma".
+# - Binary separator (exactly one ":" option, no commas in it): after "of", that word joins the two args.
+#   Example: "quotient": "function=integer part: divided by" → "integer part of x divided by y"
+#   If there are not exactly two args, the arguments fall back to "comma".
+# - Paired "ratio-style" ("<name> : <glue> | <name2> : <glue2> | ..."): used when every "|"-separated
+#   piece is a single "name : glue" pair. Verbosity selects one pair, whose glue is the binary
+#   separator described above. Example: "ratio": "function=ratio : to | the ratio : to | the ratio : to"
+#
+# Conceptual grammar (with precedence):
+#
+#   IntentMappingsEntry ::= <intent> ":" <intent_speech>          # ":" is the YAML key/value separator
+#
+#   <intent_speech> ::= <fixity_speech> ( "||" <fixity_speech> )*
+#
+#   <fixity_speech> ::= <fixity> "=" <fixity_body>
+#
+#   <fixity> ::= "prefix" | "infix" | "postfix" | "function" | "nofix" | "silent"
+#
+#   <fixity_body> ::= <standard_body> | <paired_body>
+#
+#   # Standard form: a name/bracketing part, then ":"-separated argument-glue options.
+#   <standard_body> ::= <speech_part> ( ":" <arg_glue> )*
+#
+#   <speech_part> ::= <segment> [ ";" <segment> ";" <segment> ]   # 1 part: name; 3 parts: opening; main; closing
+#
+#   <segment>  ::= <word> [ "|" <word> [ "|" <word> ] ]           # terse | medium | verbose
+#
+#   <arg_glue> ::= <segment>                                      # a single glue word, or ","-separated arity words
+#
+#   # Paired "ratio-style" form: recognized only when every "|" piece is a single "name : glue" pair.
+#   <paired_body> ::= <pair> ( "|" <pair> )+
+#
+#   <pair> ::= <word> ":" <word>                                 # the glue <word> contains no ":"
+#
+#   <word> ::= text
+#
+# Precedence depends on the form:
+#   - Standard: split on ":" first (name vs. argument-glue options), then split each piece on "|"
+#     for terse|medium|verbose, and split only the name part on ";" for opening; main; closing.
+#   - Paired: split on "|" first into "name : glue" pairs, then verbosity selects one pair.
+#
+# Example:
+#   "absolute-value": "function= ; absolute value| the absolute value| the absolute value; end absolute value"
+#   "sum": "function=sum: over: from,to"
+#   "quotient": "function=integer part: divided by"
+#   "ratio": "function=ratio : to | the ratio : to | the ratio : to"  # verbosity of name:glue pairs
+#
+- IntentMappings: {
+    "indexed-by": "infix= ; sub; ende sub| ende sub| ende subskript",
+    "modified-variable": "silent= ",
+    "say-super": "infix=super| hochstellung| hochstellung",
+    "skip-super": "silent=",
+    "absolute-value": "function= ; absoluter wert| der absolute wert| der absolute wert; ende absoluter wert",
+    "binomial": "infix=binomial; wählen; ende binomial",
+    "dimension-product": "infix=mal",
+    "greatest-common-divisor": "function=gcd| der gcd| der größte gemeinsame teiler",
+    "imaginary-part": "function=imaginärer teil, der imaginäre teil, der imaginäre teil",
+    "least-common-multiple": "function=lcm|der lcm|das kleinste gemeinsame vielfache",
+    "limit": "prefix=grenzwert bei| der grenzwert bei| der grenzwert bei",
+    "lim-sup": "prefix=lim sup bei| der obere grenzwert bei| der obere grenzwert bei",
+    "lim-inf": "prefix=lim inf bei| der untere grenzwert bei | der untere grenzwert bei",
+    "logarithm-with-base": "prefix=logarithmus basis| der logarithmus basis| der logarithmus basis",
+    "natural-logarithm": "function=ln| natürlicher logarithmus| natürlicher logarithmus",
+    "minus": "infix=minus || prefix=minus",
+    "plus": "infix=plus || prefix=plus",
+    "real-part": "function=der reale teil",
+    "transpose": "postfix=transponiert || function=die Transponierte",
+    "magnitude": "function=; Norm| Norm| Norm; Ende Norm",
+    "norm": "function=; norm| norm| norm; ende norm",
+    "trace": "function=; spur | spur| die spur; ende spur",
+    "dimension": "function=; dimension | dimension| die dimension; ende dimension",
+    "homomorphism": "function= ; homomorphismus | homomorphismus| der homomorphismus; ende homomorphismus",
+    "kernel": "function= ; kern | kern| der kern; ende kern",
+    "vector": "function= ; vektor || prefix=vektor",
+    "cross-product": "infix=kreuz| kreuzprodukt| kreuzprodukt",
+    "dot-product": "infix=punkt| punktprodukt| punkt|punktprodukt",
+    "divergence": "function= ; div| divergenz| divergenz; ende divergenz",
+    "curl": "function= ; rotation; ende rotation",
+    "gradient": "function= ; grad| gradient| gradient; ende gradient",
+    "laplacian": "function=laplace",
+    "chemistry-concentration": "function= ; konzentration| konzentration von| die konzentration von; ende konzentration"
+  }
+
+- NavigationParts: {
+    "large-op": "basis; untergrenze; obergrenze",
+    "mfrac": "zähler; nenner",
+    "fraction": "zähler; nenner",
+    "msqrt": "wurzel",
+    "square-root": "wurzel",
+    "mroot": "wurzel; wurzelexponent",
+    "root": "wurzel; wurzelexponent",
+    "msub": "basis; subskript",
+    "sub": "basis; subskript",
+    "msup": "basis; hochstellung",
+    "say-super": "basis; hochstellung",
+    "skip-super": "basis; hochstellung",
+    "power": "basis; exponent",
+    "msubsup": "basis; subskript; hochstellung",
+    "munder": "basis; untere grenze",
+    "mover": "basis; obere grenze",
+    "munderover": "basis; untere grenze; obere grenze",
+    "in": "in",
+    "out": "außerhalb von"
+  }
+
+- SIPrefixes: {
+    "Q": "quetta", "R": "ronna", "Y": "yotta", "Z": "zetta", "E": "exa", "P": "peta", "T": "tera", "G": "giga",
+    "M": "mega", "k": "kilo", "h": "hekto", "da": "deka", "d": "dezi", "c": "zenti", "m": "milli", "µ": "mikro",
+    "n": "nano", "p": "piko", "f": "femto", "a": "atto", "z": "zepto", "y": "yocto", "r": "ronto", "q": "quecto"
+  }
+
+- SIUnits: {
+    "A": "ampere", "cd": "candela", "K": "kelvin", "K": "kelvin",
+    "g": "gramm", "m": "meter", "mol": "mol", "s": "sekunde", "sec": "sekunde",
+    "Bq": "becquerel", "C": "coulomb", "°C": "grad celsius", "℃": "grad celsius",
+    "F": "farad", "Gy": "gray", "H": "henry", "Hz": "hertz", "J": "joule", "kat": "katal",
+    "lm": "lumen", "lx": "lux", "N": "newton", "Ω": "ohm", "Ω": "ohm", "Pa": "pascal",
+    "S": "siemens", "Sv": "sievert", "T": "tesla", "V": "volt", "W": "watt", "Wb": "weber",
+    "l": "liter", "L": "liter", "ℓ": "liter", "t": "tonne", "Da": "dalton", "Np": "neper",
+    "u": "atommasse-einheit", "eV": "elektronenvolt", "rad": "radiant", "sr": "steradiant",
+    "a": "jahr", "as": "bogensekunde", "b": "bit", "B": "byte", "Bd": "baud"
+  }
+
+- UnitsWithoutPrefixes: {
+    "″": "sekunde", "\"": "sekunde",
+    "′": "minute", "'": "minute", "min": "minute",
+    "h": "stunde", "hr": "stunde", "Hr": "stunde",
+    "d": "tag", "dy": "tag", "w": "woche", "wk": "woche", "y": "jahr", "yr": "jahr",
+    "°": "grad", "deg": "grad", "arcmin": "bogenminute", "amin": "bogenminute", "am": "bogenminute",
+    "MOA": "bogenminute", "arcsec": "bogensekunde", "asec": "bogensekunde",
+    "au": "astronomische einheit", "AU": "astronomische einheit", "ltyr": "lichtjahr", "ly": "lichtjahr",
+    "pc": "parsec", "Å": "ångström", "Å": "ångström", "fm": "fermi",
+    "ha": "hektar", "dB": "dezibel", "amu": "atommasse-einheit", "atm": "atmosphäre",
+    "bar": "bar", "cal": "kalorie", "Ci": "curie", "grad": "gon", "M": "mol/liter",
+    "R": "röntgen", "rpm": "Umdrehung pro Minute", "℧": "mho", "dyn": "dyn", "erg": "erg",
+    "Kib": "kibi-bit", "Mib": "mebi-bit", "Gib": "gibi-bit", "Tib": "tebi-bit", "Pib": "pebi-bit",
+    "Eib": "exbi-bit", "Zib": "zebi-bit", "Yib": "yobi-bit", "KiB": "kibi-byte", "MiB": "mebi-byte",
+    "GiB": "gibi-byte", "TiB": "tebi-byte", "PiB": "pebi-byte", "EiB": "exbi-byte",
+    "ZiB": "zebi-byte", "YiB": "yobi-byte"
+  }
+
+- EnglishUnits: {
+    # length
+    "in": "zoll",
+    "ft": "fuß",
+    "mi": "meile",
+    "rd": "rute",
+    "li": "glied",
+    "ch": "kette",
+
+    # area
+    "sq in": "quadratzoll", "sq. in": "quadratzoll", "sq. in.": "quadratzoll",
+    "sq ft": "quadratfuß", "sq. ft": "quadratfuß", "sq. ft.": "quadratfuß",
+    "sq yd": "quadratyard", "sq. yd": "quadratyard", "sq. yd.": "quadratyard",
+    "sq mi": "quadratmeile", "sq. mi": "quadratmeile", "sq. mi.": "quadratmeile",
+    "ac": "morgen",
+    "FBM": "brettfuß",
+
+    # volume
+    "cu in": "kubikzoll", "cu. in": "kubikzoll", "cu. in.": "kubikzoll",
+    "cu ft": "kubikfuß", "cu. ft": "kubikfuß", "cu. ft.": "kubikfuß",
+    "cu yd": "kubikyard", "cu. yd": "kubikyard", "cu. yd.": "kubikyard",
+    "bbl": "fass", "BBL": "fass",
+    "pk": "buschelmaß",
+    "bu": "buschel",
+    "tsp": "teelöffel",
+    "tbl": "esslöffel",
+
+    # liquid
+    "fl dr": "flüssige dram",
+    "fl oz": "flüssige unze",
+    "gi": "gill",
+    "cp": "tasse", "cup": "tasse",
+    "pt": "pint",
+    "qt": "quart",
+    "gal": "gallone",
+
+    # weight
+    "gr": "korn",
+    "dr": "dram",
+    "oz": "unze", "℥": "unze",
+    "lb": "pfund",
+    "cwt": "zentner",
+    "dwt": "feingewicht",
+    "oz t": "troy-unze",
+    "lb t": "troy-pfund",
+
+    # energy
+    "hp": "ps",
+    "BTU": "britische wärmeeinheit",
+    "°F": "grad fahrenheit", "℉": "grad fahrenheit",
+
+    # other
+    "mph": "meile pro stunde",
+    "mpg": "meile pro gallone",
+  }
+
+- CurrencySymbols: {
+    "$": "dollar", "¢": "cent", "€": "euro", "£": "pfund", "₡": "colón", "₤": "lira", "₨": "rupie",
+    "₩": "won", "₪": "schekel", "₱": "peso", "₹": "rupie", "₺": "lira", "₿": "bitcoin"
+  }
+
+- PluralForms: {
+    "ampere": "ampere", "candela": "candela", "kelvin": "kelvin",
+    "gramm": "gramm", "meter": "meter", "mol": "mol", "sekunde": "sekunden",
+    "becquerel": "becquerel", "coulomb": "coulomb", "grad celsius": "grad celsius",
+    "farad": "farad", "gray": "gray", "henry": "henry", "hertz": "hertz",
+    "joule": "joule", "katal": "katal", "lumen": "lumen", "lux": "lux",
+    "newton": "newton", "ohm": "ohm", "pascal": "pascal", "siemens": "siemens",
+    "sievert": "sievert", "tesla": "tesla", "volt": "volt", "watt": "watt", "weber": "weber",
+    "liter": "liter", "tonne": "tonnen", "dalton": "dalton", "neper": "neper",
+    "atommasse-einheit": "atommasse-einheiten", "elektronenvolt": "elektronenvolt",
+    "radiant": "radianten", "steradiant": "steradianten", "jahr": "jahre",
+    "bogenminute": "bogenminuten", "bogensekunde": "bogensekunden", "bit": "bit",
+    "byte": "byte", "baud": "baud",
+    "zoll": "zoll", "fuß": "füße", "meile": "meilen", "rute": "ruten",
+    "glied": "glieder", "kette": "ketten", "fass": "fässer", "gallone": "gallonen",
+    "quadratzoll": "quadratzoll", "quadratfuß": "quadratfüße", "quadratyard": "quadratyards",
+    "quadratmeile": "quadratmeilen", "morgen": "morgen", "brettfuß": "brettfüße",
+    "kubikzoll": "kubikzoll", "kubikfuß": "kubikfüße", "kubikyard": "kubikyards",
+    "buschelmaß": "buschelmaße", "buschel": "buschel", "teelöffel": "teelöffel",
+    "esslöffel": "esslöffel", "flüssige dram": "flüssige drams", "gill": "gills",
+    "tasse": "tassen", "pint": "pints", "quart": "quarts", "korn": "körner",
+    "dram": "drams", "unze": "unzen", "pfund": "pfund", "zentner": "zentner",
+    "feingewicht": "feingewichte", "troy-unze": "troy-unzen", "troy-pfund": "troy-pfund",
+    "ps": "ps", "britische wärmeeinheit": "britische wärmeeinheiten",
+    "grad fahrenheit": "grad fahrenheit",
+    "meile pro stunde": "meilen pro stunde", "meile pro gallone": "meilen pro gallone",
+
+    "minute": "minuten", "stunde": "stunden", "tag": "tage", "woche": "wochen",
+    "grad": "grade", "astronomische einheit": "astronomische einheiten",
+    "lichtjahr": "lichtjahre", "parsec": "parsec", "ångström": "ångström",
+    "fermi": "fermis", "hektar": "hektar", "dezibel": "dezibel",
+    "atmosphäre": "atmosphären", "bar": "bar", "kalorie": "kalorien", "curie": "curie",
+    "gon": "gon", "mol/liter": "mol/liter", "röntgen": "röntgen", "mho": "mho",
+    "dyn": "dyn", "erg": "erg",
+    "kibi-bit": "kibi-bit", "mebi-bit": "mebi-bit", "gibi-bit": "gibi-bit",
+    "tebi-bit": "tebi-bit", "pebi-bit": "pebi-bit", "exbi-bit": "exbi-bit",
+    "zebi-bit": "zebi-bit", "yobi-bit": "yobi-bit",
+    "kibi-byte": "kibi-byte", "mebi-byte": "mebi-byte", "gibi-byte": "gibi-byte",
+    "tebi-byte": "tebi-byte", "pebi-byte": "pebi-byte", "exbi-byte": "exbi-byte",
+    "zebi-byte": "zebi-byte", "yobi-byte": "yobi-byte",
+    "Umdrehung pro Minute": "Umdrehungen pro Minute"
+  }
+
+
+# ----------------  Cardinal and Ordinal Numbers  --------------------------
+# The following definitions are used to convert numbers to words
+# The are mainly used for ordinals, of which there are two cases:
+# 1. Regular ordinals: first, second, third, ...
+# 2. Ordinals used in the denominator of fractions (e.g, one half, one third)
+#    When used in the denominator of fractions, a plural version might be
+#    used (e.g., two halves, two thirds)
+# Although a lot of languages are regular after a few entries, for generality,
+# the following lists should be filled out even though they are the same
+# or easily derived from others in many languages (e.g, an 's' is added for plurals).
+# The larger ordinal numbers (e.g, millionth) is used when there are only
+# '0's after that decimal place (e.g., 23000000).:w
+
+# All definitions start 0, 10, 100, etc.
+
+# The definitions for the "ones" should extend until a regular pattern begins
+#   The minimum length is 10.
+
+# For English, a regular pattern starts at twenty
+- NumbersOnes: [
+        "null", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun",
+        "zehn", "elf", "zwölf", "dreizehn", "vierzehn", "fünfzehn", "sechzehn",
+        "siebzehn", "achtzehn", "neunzehn"
+    ]
+
+- NumbersOrdinalOnes: [
+        "nullte", "erste", "zweite", "dritte", "vierte", "fünfte", "sechste", "siebte", "achte", "neunte",
+        "zehnte", "elfte", "zwölfte", "dreizehnte", "vierzehnte", "fünfzehnte", "sechzehnte",
+        "siebzehnte", "achtzehnte", "neunzehnte"
+    ]
+
+- NumbersOrdinalPluralOnes: [
+        "nullte", "erste", "zweite", "dritte", "vierte", "fünfte", "sechste", "siebte", "achte", "neunte",
+        "zehnte", "elfte", "zwölfte", "dreizehnte", "vierzehnte", "fünfzehnte", "sechzehnte",
+        "siebzehnte", "achtzehnte", "neunzehnte"
+    ]
+
+  # stop when regularity begins
+- NumbersOrdinalFractionalOnes: [
+        "null", "erste", "hälfte", "drittel", "viertel", "fünftel", "sechstel", "siebtel", "achtel", "neuntel", "zehntel",
+        "elftel", "zwölftel", "dreizehntel", "vierzehntel", "fünfzehntel", "sechzehntel",
+        "siebzehntel", "achtzehntel", "neunzehntel"
+    ]
+
+  # stop when regularity begins
+- NumbersOrdinalFractionalPluralOnes: [
+        "nulle", "erste", "hälften", "Drittel", "Viertel", "Fünftel", "Sechstel", "Siebtel", "Achtel", "Neuntel", "Zehntel",
+        "Elftel", "Zwölftel", "Dreizehntel", "Vierzehntel", "Fünfzehntel", "Sechzehntel",
+        "Siebzehntel", "Achtzehntel", "Neunzehntel"
+    ]
+
+  # What to use for multiples of 10
+- NumbersTens: [
+        "", "zehn", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"
+    ]
+
+- NumbersOrdinalTens: [
+        "", "zehnte", "zwanzigste", "dreißigste", "vierzigste", "fünfzigste", "sechzigste", "siebzigste", "achtzigste", "neunzigste"
+    ]
+
+- NumbersOrdinalPluralTens: [
+        "", "zehnte", "zwanzigste", "dreißigste", "vierzigste", "fünfzigste", "sechzigste", "siebzigste", "achtzigste", "neunzigste"
+    ]
+
+- NumbersHundreds: [
+        "", "einhundert", "zweihundert", "dreihundert", "vierhundert", "fünfhundert",
+        "sechshundert", "siebenhundert", "achthundert", "neunhundert"
+    ]
+
+- NumbersOrdinalHundreds: [
+        "", "einhundertste", "zweihundertste", "dreihundertste", "vierhundertste", "fünfhundertste",
+        "sechshundertste", "siebenhundertste", "achthundertste", "neunhundertste"
+    ]
+
+- NumbersOrdinalPluralHundreds: [
+        "", "einhundertste", "zweihundertste", "dreihundertste", "vierhundertste", "fünfhundertste",
+        "sechshundertste", "siebenhundertste", "achthundertste", "neunhundertste"
+    ]
+
+  # At this point, hopefully the language is regular. If not, code needs to be written
+- NumbersLarge: [
+        "", "tausend", "million", "milliarde", "billion", "billiarde",
+        "trillion", "trilliarde", "quadrillion", "quadrilliarde", "quintillion"
+    ]
+
+- NumbersOrdinalLarge: [
+        "", "tausendste", "millionste", "milliardste", "billionste", "billiardste",
+        "trillionste", "trilliardste", "quadrillionste", "quadrilliardste", "quintillionste"
+    ]
+
+- NumbersOrdinalPluralLarge: [
+        "", "tausendste", "millionste", "milliardste", "billionste", "billiardste",
+        "trillionste", "trilliardste", "quadrillionste", "quadrilliardste", "quintillionste"
+    ]
+

@@ -215,14 +215,12 @@ class MathReadAloudPlayer extends HTMLElement {
                 border-radius: 3px;
                 box-shadow: 0 0 0 2px #fff3cd;
             }
-            /* Standard Math Highlight */
-            math-read-aloud-player .highlight-math { 
-                background-color: #fff3cd; 
-                border-left: 4px solid #ffc107;
+                 /* Standard Math Highlight - NO LAYOUT SHIFT */
+                math-read-aloud-player .highlight-math { 
+                background-color: #fff3cd !important; 
+                outline: 4px solid #ffc107 !important;
+                outline-offset: 2px;
                 border-radius: 4px;
-                padding: 8px;
-                display: inline-block;
-                box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
             }
 
             /* HIGH CONTRAST OVERRIDES */

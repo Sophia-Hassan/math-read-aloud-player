@@ -1,7 +1,7 @@
 {
   "segments": [
     { "id": "p1", "type": "text", "start": 0.0, "end": 6.0 },
-    { "id": "m1", "type": "math", "start": 6.5, "end": 9.0 },
-    { "id": "p3", "type": "text", "start": 11.0, "end": 19.0 }
+    { "id": "m1", "type": "math", "start": 6.5, "end": 13.0 },
+    { "id": "p3", "type": "text", "start": 13.0, "end": 19.0 }
   ]
 }

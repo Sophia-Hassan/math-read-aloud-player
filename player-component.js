@@ -349,6 +349,7 @@ class MathReadAloudPlayer extends HTMLElement {
     }
 
     skipNext() {
+          if (this.segments.length === 0) return; 
         const currentTime = this.audio.currentTime;
         const currentIndex = this.segments.findIndex(s => currentTime >= s.start && currentTime < s.end);
         if (currentIndex !== -1 && currentIndex < this.segments.length - 1) {
@@ -357,6 +358,7 @@ class MathReadAloudPlayer extends HTMLElement {
     }
 
     skipPrevious() {
+          if (this.segments.length === 0) return; 
         const currentTime = this.audio.currentTime;
         const currentIndex = this.segments.findIndex(s => currentTime >= s.start && currentTime < s.end);
         if (currentIndex > 0) {
@@ -482,6 +484,7 @@ class MathReadAloudPlayer extends HTMLElement {
     }
 
     seekTo(id) {
+        if (this.segments.length === 0) return; 
         if (this.isSpeakingMath) {
             window.speechSynthesis.cancel();
             this.isSpeakingMath = false;
